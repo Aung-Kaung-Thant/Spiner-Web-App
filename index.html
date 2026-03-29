@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>CRUD Spin Wheel | Manage Segments Freely</title>
+    <link rel="icon" href="/assets/images/logo.jpeg">
+    <link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body>
+<div class="container">
+    <nav>
+        <img src="/assets/images/logo.jpeg" alt="logo">
+        <h2 class="title">Spiner Web App<br><sub>POWERED BY Nicholas Cain</sub></h2>
+        <a href="/about.html">About Developer</a>
+    </nav>
+    <div class="main-grid">
+        <!-- wheel display -->
+        
+         <h1>▼</h1>
+        <div class="wheel-box">
+            <canvas id="wheelCanvas" width="500" height="500"></canvas>
+            <div class="result-area" id="resultDisplay">✨ tap wheel or press SPIN</div>
+        </div>
+
+        <!-- CRUD panel -->
+        <div class="crud-panel">
+            <div class="action-buttons">
+                <button class="primary-btn" id="addSegmentBtn">➕ Add New</button>
+                <button class="primary-btn" id="resetDefaultBtn">↻ Reset Default</button>
+            </div>
+
+            <div class="segment-list" id="segmentList">
+                <!-- dynamic list from segments array -->
+            </div>
+
+            <button class="spin-btn" id="spinBtn">🎲 SPIN THE WHEEL</button>
+        </div>
+    </div>
+    <footer>click on any text to edit | delete button removes segment immediately</footer>
+</div>
+
+<script>
+    // ---------- DATA ----------
+    let segments = [
+        { id: "s1", text: "Apple", color: "#F94144" },
+        { id: "s2", text: "Banana", color: "#F9C74F" },
+        { id: "s3", text: "Cherry", color: "#F9844A" },
+        { id: "s4", text: "Donut", color: "#90BE6D" },
+        { id: "s5", text: "Egg", color: "#43AA8B" }
+    ];
+
+    // color palette for new segments (cycle)
+    const colorPalette = [
+        "#F94144","#F9C74F","#F9844A","#90BE6D","#43AA8B","#4D908E","#577590","#9B5DE5","#F15BB5","#FEE440"
+    ];
+
+    // wheel state
+    let currentRotation = 0;        // radians
+    let spinning = false;
+    let animFrame = null;
+    let spinStart = 0;
+    let spinDuration = 1400;
+    let spinTarget = 0;
+
+    // DOM elements
+    const canvas = document.getElementById('wheelCanvas');
+    const ctx = canvas.getContext('2d');
+    const segmentListDiv = document.getElementById('segmentList');
+    const spinBtn = document.getElementById('spinBtn');
+    const addSegmentBtn = document.getElementById('addSegmentBtn');
+    const resetDefaultBtn = document.getElementById('resetDefaultBtn');
+    const resultDisplay = document.getElementById('resultDisplay');
+
+    let width = 500, height = 500;
+    let centerX = width/2, centerY = height/2;
+    let radius = width * 0.42;
+
+    // ----- helper: generate unique id -----
+    function generateId() {
+        return Date.now() + '-' + Math.random().toString(36).substr(2, 6);
+    }
+
+    // ----- get color for new segment (based on index) -----
+    function getColorForIndex(idx) {
+        return colorPalette[idx % colorPalette.length];
+    }
+
+    // ----- CRUD: render segment list (UI) -----
+    function renderSegmentList() {
+        segmentListDiv.innerHTML = '';
+        segments.forEach((seg, idx) => {
+            const card = document.createElement('div');
+            card.className = 'segment-card';
+            
+            const indexSpan = document.createElement('span');
+            indexSpan.className = 'segment-index';
+            indexSpan.textContent = idx+1;
+            
+            const textInput = document.createElement('input');
+            textInput.type = 'text';
+            textInput.className = 'segment-text-input';
+            textInput.value = seg.text;
+            // update on input (real-time)
+            textInput.addEventListener('input', (e) => {
+                seg.text = e.target.value;
+                drawWheel();          // update wheel immediately
+            });
+            
+            const delBtn = document.createElement('button');
+            // delBtn.textContent = 'D:\\computer sevric\\grammar\\spiner\\assets\\images\\delete.svg';
+            delBtn.textContent = 'X';
+
+            
+            delBtn.className = 'delete-btn';
+            delBtn.title = 'Delete this segment';
+            delBtn.addEventListener('click', () => {
+                if (segments.length <= 1) {
+                    alert("At least one segment is required!");
+                    return;
+                }
+                if (confirm(`Delete "${seg.text}" ?`)) {
+                    deleteSegmentById(seg.id);
+                }
+            });
+            
+            card.appendChild(indexSpan);
+            card.appendChild(textInput);
+            card.appendChild(delBtn);
+            segmentListDiv.appendChild(card);
+        });
+    }
+
+    // delete by id
+    function deleteSegmentById(id) {
+        const index = segments.findIndex(s => s.id === id);
+        if (index !== -1) {
+            segments.splice(index, 1);
+            renderSegmentList();
+            drawWheel();
+        }
+    }
+
+    // add new segment
+    function addNewSegment() {
+        const newId = generateId();
+        const newText = `Part ${segments.length+1}`;
+        const newColor = getColorForIndex(segments.length);
+        segments.push({ id: newId, text: newText, color: newColor });
+        renderSegmentList();
+        drawWheel();
+    }
+
+    // reset to default 5 items
+    function resetToDefault() {
+        segments = [
+            { id: generateId(), text: "Apple", color: "#F94144" },
+            { id: generateId(), text: "Banana", color: "#F9C74F" },
+            { id: generateId(), text: "Cherry", color: "#F9844A" },
+            { id: generateId(), text: "Donut", color: "#90BE6D" },
+            { id: generateId(), text: "Egg", color: "#43AA8B" }
+        ];
+        renderSegmentList();
+        drawWheel();
+        resultDisplay.innerHTML = "✨ reset to default segments";
+    }
+
+    // ---------- WHEEL DRAWING ----------
+    function drawWheel() {
+        if (!ctx) return;
+        if (segments.length === 0) return;
+        const angleStep = (Math.PI * 2) / segments.length;
+        ctx.clearRect(0, 0, width, height);
+        
+        for (let i = 0; i < segments.length; i++) {
+            const start = currentRotation + i * angleStep;
+            const end = start + angleStep;
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.arc(centerX, centerY, radius, start, end);
+            ctx.closePath();
+            ctx.fillStyle = segments[i].color;
+            ctx.fill();
+            ctx.strokeStyle = "#2c2c2c";
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+            
+            // draw text
+            ctx.save();
+            ctx.translate(centerX, centerY);
+            ctx.rotate(start + angleStep/2);
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            const textRadius = radius * 0.68;
+            const fontSize = Math.max(12, Math.min(18, radius/11));
+            ctx.font = `${fontSize}px "Segoe UI", system-ui`;
+            ctx.fillStyle = "#ffffff";
+            ctx.shadowBlur = 0;
+            ctx.fillText(segments[i].text, textRadius, 0);
+            ctx.restore();
+        }
+        
+        // center dot & pointer
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, radius * 0.1, 0, Math.PI*2);
+        ctx.fillStyle = "#FFD966";
+        ctx.fill();
+    }
+
+    // get current segment index under pointer (top)
+    function getCurrentSegmentIndex() {
+        if (segments.length === 0) return -1;
+        const angleStep = (Math.PI * 2) / segments.length;
+        const pointerAngle = -Math.PI/2;  // upward
+        let rawAngle = (pointerAngle - currentRotation) % (Math.PI*2);
+        if (rawAngle < 0) rawAngle += Math.PI*2;
+        return Math.floor(rawAngle / angleStep) % segments.length;
+    }
+
+    // spin animation
+    function spinWheel() {
+        if (spinning || segments.length === 0) return;
+        const extraSpins = 8 + Math.random() * 8;   // 8~16 full rotations
+        const finalOffset = Math.random() * Math.PI * 2;
+        const targetRotation = currentRotation + (extraSpins * Math.PI * 2) + finalOffset;
+        spinTarget = targetRotation;
+        spinStart = performance.now();
+        spinning = true;
+        const startRot = currentRotation;
+        
+        function step(now) {
+            const elapsed = now - spinStart;
+            let t = Math.min(1, elapsed / spinDuration);
+            const ease = 1 - Math.pow(1-t, 3);
+            currentRotation = startRot + (spinTarget - startRot) * ease;
+            drawWheel();
+            if (t < 1) {
+                animFrame = requestAnimationFrame(step);
+            } else {
+                currentRotation = spinTarget % (Math.PI*2);
+                drawWheel();
+                spinning = false;
+                cancelAnimationFrame(animFrame);
+                const winnerIdx = getCurrentSegmentIndex();
+                if (winnerIdx !== -1) {
+                    resultDisplay.innerHTML = `🎉 WINNER: ${segments[winnerIdx].text} 🎉`;
+                } else {
+                    resultDisplay.innerHTML = `⚠️ No segment found`;
+                }
+            }
+        }
+        if (animFrame) cancelAnimationFrame(animFrame);
+        animFrame = requestAnimationFrame(step);
+    }
+
+    // resize canvas dynamically
+    function resizeCanvasAndRedraw() {
+        const container = canvas.parentElement;
+        const maxSize = Math.min(container.clientWidth, 420);
+        canvas.width = maxSize;
+        canvas.height = maxSize;
+        width = maxSize;
+        height = maxSize;
+        centerX = width/2;
+        centerY = height/2;
+        radius = width * 0.42;
+        drawWheel();
+    }
+
+    // ---------- INITIALIZE & EVENT LISTENERS ----------
+    function init() {
+        resizeCanvasAndRedraw();
+        renderSegmentList();
+        drawWheel();
+        
+        spinBtn.addEventListener('click', () => {
+            if (!spinning && segments.length > 0) spinWheel();
+        });
+        canvas.addEventListener('click', () => {
+            if (!spinning && segments.length > 0) spinWheel();
+        });
+        addSegmentBtn.addEventListener('click', addNewSegment);
+        resetDefaultBtn.addEventListener('click', resetToDefault);
+        window.addEventListener('resize', () => {
+            resizeCanvasAndRedraw();
+        });
+    }
+
+    init();
+</script>
+</body>
+</html>

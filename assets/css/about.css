@@ -1,0 +1,236 @@
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1d1d1d 0%, #060606 100%);
+            color: #b69d75;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        .back-btn {
+            display: inline-block;
+            background: transparent;
+            border: 2px solid #b69d75;
+            color: #b69d75;
+            padding: 10px 25px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: all 0.3s;
+            margin-bottom: 40px;
+        }
+        
+        .back-btn:hover {
+            background: #b69d75;
+            color: #1d1d1d;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+        
+        .profile img {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #b69d75, #8a7455);
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 60px;
+            color: #1d1d1d;
+            font-weight: bold;
+            box-shadow: 0 10px 30px rgba(182, 157, 117, 0.3);
+        }
+
+        .logopng{
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+        }
+        
+        
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            /* background: linear-gradient(45deg, #b69d75, #e8c8a0);
+            -webkit-text-fill-color: transparent; */
+        }
+        
+        .tagline {
+            font-size: 1.2em;
+            color: #8a7455;
+            margin-bottom: 30px;
+        }
+        
+        .content-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+        .contact-item {
+            font-size: 8px;
+        }
+        .card {
+            background: rgba(6, 6, 6, 0.8);
+            border: 1px solid #333;
+            border-radius: 15px;
+            padding: 30px;
+            transition: transform 0.3s, border-color 0.3s;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: #b69d75;
+        }
+        
+        .card h3 {
+            color: #b69d75;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .skills-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .skill-tag {
+            background: rgba(182, 157, 117, 0.2);
+            border: 1px solid #b69d75;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            transition: all 0.3s;
+        }
+        
+        .skill-tag:hover {
+            background: #b69d75;
+            color: #1d1d1d;
+        }
+        
+        .timeline {
+            position: relative;
+            padding-left: 30px;
+        }
+        
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #b69d75;
+        }
+        
+        .timeline-item {
+            position: relative;
+            margin-bottom: 30px;
+            padding-left: 20px;
+        }
+        
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -30px;
+            top: 5px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #b69d75;
+        }
+        
+        .year {
+            color: #8a7455;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .contact-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            background: rgba(6, 6, 6, 0.8);
+            border-radius: 10px;
+            border: 1px solid #333;
+        }
+        
+        .contact-icon {
+            width: 40px;
+            height: 40px;
+            background: #b69d75;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #1d1d1d;
+            font-size: 20px;
+        }
+        
+        .quote {
+            text-align: center;
+            font-style: italic;
+            font-size: 1.2em;
+            padding: 30px;
+            border-top: 1px solid #333;
+            border-bottom: 1px solid #333;
+            margin: 50px 0;
+            color: #8a7455;
+        }
+        
+        .quote strong {
+            color: #b69d75;
+            display: block;
+            margin-top: 15px;
+        }
+        .result-area {
+            background: #00000066;
+            border-radius: 40px;
+            padding: 12px;
+            text-align: center;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #FFE6AA;
+            margin-top: 20px;
+        }
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+            
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
